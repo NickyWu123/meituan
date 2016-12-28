@@ -6,6 +6,19 @@ import json
 import codecs
 import time
 from collections import OrderedDict
+import xlwt
+import xlrd
+import xlwt
+workbook = xlwt.Workbook()
+sheet1 = workbook.add_sheet(u'美团团购数据',cell_overwrite_ok=True)
+sheet1.write(0,0,u'商店')
+sheet1.write(0,1,u'地址')
+sheet1.write(0,2,u'电话')
+sheet1.write(0,3,u'类别')
+sheet1.write(0,4,u'团购商品')
+sheet1.write(0,5,u'团购已售')
+sheet1.write(0,6,u'团购门店价')
+sheet1.write(0,7,u'团购价')
 
 
 def get_pc_ktv_urls(url,headers,pc_ktv_urls):
@@ -31,14 +44,40 @@ def get_pc_ktv_urls(url,headers,pc_ktv_urls):
 		print('No the next page,try to request the shop urls')
 		file = codecs.open('pc_ktv_data_utf8.json', 'w', encoding='utf-8')
 		shop_urls=set(pc_ktv_urls)
-		for i in shop_urls:
-			shop_url='http://fz.meituan.com/shop/%s'%i
+		for i,j in enumerate(shop_urls):
+			shop_url='http://fz.meituan.com/shop/%s'%j
 			print(shop_url)
 			time.sleep(5)
 			pc_ktv_info=get_pc_ktv_info(url=shop_url,headers=headers)
 			print(pc_ktv_info)
+			print ('Put the data into the json file')
 			line = json.dumps(OrderedDict(pc_ktv_info), ensure_ascii=False, sort_keys=False) + "\n"
 			file.write(line)
+			print ('Put the data into the csv file')
+			sheet1.write(i+1,0,pc_ktv_info['title'])
+			sheet1.write(i+1,1,pc_ktv_info['address'])
+			sheet1.write(i+1,2,pc_ktv_info['tel'])
+			sheet1.write(i+1,3,pc_ktv_info['general'])
+			title=u''
+			count_sale=u''
+			store_price=u''
+			group_price=u''
+			for j,k in enumerate(pc_ktv_info['groupbuying_items']):
+				if j!=len(pc_ktv_info['groupbuying_items'])-1:
+					title+=k['title']+u'/'
+					count_sale+=k['count_sale']+u'/'
+					store_price+=k['store_price']+u'/'
+					group_price+=k['group_price']+u'/'
+				else:
+					title+=k['title']
+					count_sale+=k['count_sale']
+					store_price+=k['store_price']
+					group_price+=k['group_price']
+				sheet1.write(i+1,4,title)
+				sheet1.write(i+1,5,count_sale)
+				sheet1.write(i+1,6,store_price)
+				sheet1.write(i+1,7,group_price)
+		workbook.save('meituan_pc_ktv.xls')
 		print('Working finished')
 		file.close()
 		
@@ -57,7 +96,7 @@ def get_pc_ktv_info(url,headers):
 	if tel:
 		tel=tel[0]
 	else:
-		tel='no tel'
+		tel='Null'
 	pc_ktv_info['tel']=tel
 	general=tree.xpath('//*[@class="info"]/div[2]/a/text()')[0]
 	pc_ktv_info['general']=general

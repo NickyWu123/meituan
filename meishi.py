@@ -103,7 +103,7 @@ def get_meishi_info(url,headers):
 	if tel:
 		tel=tel[0]
 	else:
-		tel='no tel'
+		tel='Null'
 	meishi_info['tel']=tel
 	general=tree.xpath('//*[@class="info"]/div[2]/a/text()')[0]
 	meishi_info['general']=general
